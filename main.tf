@@ -47,6 +47,81 @@ resource "azurerm_kubernetes_cluster" "example" {
   }
 }
 
+provider "kubernetes" {
+  host                   = azurerm_kubernetes_cluster.example.kube_config.0.host
+  username               = azurerm_kubernetes_cluster.example.kube_config.0.username
+  password               = azurerm_kubernetes_cluster.example.kube_config.0.password
+  client_certificate     = base64decode(azurerm_kubernetes_cluster.example.kube_config.0.client_certificate)
+  client_key             = base64decode(azurerm_kubernetes_cluster.example.kube_config.0.client_key)
+  cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.example.kube_config.0.cluster_ca_certificate)
+}
+
+resource "kubernetes_namespace" "example" {
+  metadata {
+    name = "example"
+  }
+}
+
+resource "kubernetes_deployment" "example" {
+  metadata {
+    name = "nginx-deployment"
+    namespace = kubernetes_namespace.example.metadata.0.name
+    labels = {
+      App = "Nginx"
+    }
+  }
+
+  spec {
+    replicas = 3
+    selector {
+      match_labels = {
+        App = "Nginx"
+      }
+    }
+    template {
+      metadata {
+        labels = {
+          App = "Nginx"
+        }
+      }
+      spec {
+        container {
+          image = "nginx:1.15.8"
+          name  = "nginx"
+
+          port {
+            container_port = 80
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_service" "example" {
+  metadata {
+    name = "nginx-service"
+    namespace = kubernetes_namespace.example.metadata.0.name
+  }
+  spec {
+    selector = {
+      App = "${kubernetes_deployment.example.metadata.0.labels["App"]}"
+    }
+    port {
+      port        = 80
+      target_port = 80
+    }
+
+    type = "LoadBalancer"
+  }
+}
+
+output "load_balancer_ip" {
+  value = kubernetes_service.example.status.0.load_balancer.0.ingress.0.ip
+  sensitive = true
+}
+
+
 output "client_certificate" {
   value     = azurerm_kubernetes_cluster.example.kube_config.0.client_certificate
   sensitive = true
