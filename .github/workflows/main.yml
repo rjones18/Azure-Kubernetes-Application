@@ -23,7 +23,7 @@ jobs:
         env:
          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-         args: iac test .
+         args: iac test . --report
         continue-on-error: true
       
       - name: Setup Terraform
