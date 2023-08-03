@@ -26,8 +26,9 @@ resource "azurerm_kubernetes_cluster" "example" {
 
   default_node_pool {
     name       = "default"
-    node_count = 1
+    node_count = 2
     vm_size    = "Standard_D2_v2"
+    type       = "VirtualMachineScaleSets"
     vnet_subnet_id = data.azurerm_subnet.existing.id
   }
 
@@ -48,12 +49,12 @@ resource "azurerm_kubernetes_cluster" "example" {
   }
 }
 
-resource "azurerm_kubernetes_cluster_node_pool" "example1" {
-  name                  = "example1"
-  kubernetes_cluster_id = azurerm_kubernetes_cluster.example.id
-  vm_size               = "Standard_D2_v2"
-  node_count            = 1
-}
+// resource "azurerm_kubernetes_cluster_node_pool" "example1" {
+//   name                  = "example1"
+//   kubernetes_cluster_id = azurerm_kubernetes_cluster.example.id
+//   vm_size               = "Standard_D2_v2"
+//   node_count            = 1
+// }
 
 
 provider "kubernetes" {
