@@ -27,9 +27,8 @@ resource "azurerm_kubernetes_cluster" "example" {
   default_node_pool {
     name       = "default"
     node_count = 2
-    vm_size    = "Standard_D2_v2"
+    vm_size    = "Standard_B1s"
     vnet_subnet_id = data.azurerm_subnet.existing.id
-    availability_zones = ["1", "2"]
   }
 
   network_profile {
@@ -42,6 +41,7 @@ resource "azurerm_kubernetes_cluster" "example" {
   identity {
     type = "SystemAssigned"
   }
+
 
   tags = {
     Environment = "Production"
