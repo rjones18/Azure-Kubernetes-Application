@@ -1,4 +1,4 @@
-name: Deploy Terraform to Azure
+name: Deploy and Security Scan Terraform to Azure
 
 on:
   push:
@@ -12,18 +12,36 @@ env:
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
 jobs:
-  terraform:
-    name: Terraform
+  terraform_security_and_deploy:
+    name: Terraform Security and Deploy
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        
+      - name: Setup .NET for Microsoft Security DevOps
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: |
+            5.0.x
+            6.0.x
+        
+      - name: Run Microsoft Security DevOps
+        uses: microsoft/security-devops-action@v1.6.0
+        id: msdo
+        
+      - name: Upload results to Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: ${{ steps.msdo.outputs.sarifFile }}
+        
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/iac@master
         env:
-         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-         args: iac test . --report
+          args: iac test . --report
         continue-on-error: true
       
       - name: Setup Terraform
